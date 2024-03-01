@@ -133,7 +133,7 @@ public class RtcpUdpClient extends UdpClientBasic implements IRtspDataStream {
                 this.statistics.processRtcpPackage(basePackages);
             } catch (SocketRuntimeException e) {
                 // SocketRuntimeException就是IO异常，网络断开了，结束线程
-                log.error(e.getMessage());
+                // log.error(e.getMessage());
                 this.terminal = true;
                 break;
             } catch (Exception e) {
