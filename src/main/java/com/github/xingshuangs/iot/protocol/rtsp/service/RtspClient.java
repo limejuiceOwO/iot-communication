@@ -112,13 +112,15 @@ public class RtspClient extends RtspNetwork {
      * 断开
      */
     public void stop() {
+        if (!this.alive) {
+            return;
+        }
+        this.alive = false;
+
         if (this.executorService != null) {
             this.executorService.shutdown();
         }
-        if (this.alive) {
-            this.alive = false;
-            this.teardown();
-            this.close();
-        }
+        this.teardown();
+        this.close();
     }
 }

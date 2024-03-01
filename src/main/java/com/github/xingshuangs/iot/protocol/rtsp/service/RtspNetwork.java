@@ -394,6 +394,9 @@ public class RtspNetwork extends TcpClientBasic {
             rtspInterleavedClient.setRtpVideoChannelNumber(ackTransport.getInterleaved1());
             rtspInterleavedClient.setRtcpVideoChannelNumber(ackTransport.getInterleaved2());
             this.socketClients.put(rtspInterleavedClient.getRtpVideoChannelNumber(), rtspInterleavedClient);
+
+            // 同一个 socket 多线程并发读肯定有问题，先 break 掉
+            break;
         }
     }
 
@@ -443,20 +446,17 @@ public class RtspNetwork extends TcpClientBasic {
      */
     protected void teardown() {
         this.clearSocketConnection();
-        this.checkBeforeRequest(ERtspMethod.TEARDOWN);
+        try {
+            this.checkBeforeRequest(ERtspMethod.TEARDOWN);
 
-        RtspTeardownRequest request = this.needAuthorization ?
-                new RtspTeardownRequest(this.uri, this.sessionInfo.getSessionId(), this.authenticator)
-                : new RtspTeardownRequest(this.uri, this.sessionInfo.getSessionId());
-//        if (this.transportProtocol == ERtspTransportProtocol.UDP) {
-//            RtspTeardownResponse response = (RtspTeardownResponse) this.readFromServer(request);
-//            this.checkAfterResponse(response, ERtspMethod.TEARDOWN);
-//        } else {
-//            this.sendToServer(request);
-//        }
-        this.sendWithoutReturn(request);
-        if (this.destroyHandle != null) {
-            this.destroyHandle.run();
+            RtspTeardownRequest request = this.needAuthorization ?
+                    new RtspTeardownRequest(this.uri, this.sessionInfo.getSessionId(), this.authenticator)
+                    : new RtspTeardownRequest(this.uri, this.sessionInfo.getSessionId());
+            this.sendWithoutReturn(request);
+        } finally {
+            if (this.destroyHandle != null) {
+                this.destroyHandle.run();
+            }
         }
     }
 
@@ -484,7 +484,8 @@ public class RtspNetwork extends TcpClientBasic {
             return;
         }
         this.socketClients.values().forEach(IRtspDataStream::close);
-        this.socketClientJoinForFinished();
+        // 此处还没调用 socket.close，read 操作无法中断，如果一直没读到数据，阻塞等待会导致线程卡死无法退出
+        // this.socketClientJoinForFinished();
         this.socketClients.clear();
     }
 

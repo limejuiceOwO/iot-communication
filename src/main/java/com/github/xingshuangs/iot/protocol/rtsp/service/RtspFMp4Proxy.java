@@ -330,11 +330,16 @@ public class RtspFMp4Proxy {
      * 结束
      */
     public void stop() {
-        if (this.executorService != null) {
-            this.executorService.shutdown();
+        if (this.terminal) {
+            return;
         }
+        this.terminal = true;
+
+        if (this.executorService != null) {
+            this.executorService.shutdownNow();
+        }
+
         if (this.asyncSend) {
-            this.terminal = true;
             synchronized (this.objLock) {
                 this.objLock.notifyAll();
             }

@@ -133,12 +133,18 @@ public class RtspInterleavedClient implements IRtspDataStream {
 
     @Override
     public void close() {
+        if (this.terminal) {
+            return;
+        }
+        this.terminal = true;
+
         this.executorService.shutdown();
-        if (!this.terminal) {
-            // 发送byte
-            byte[] receiverAndByteContent = this.statistics.createReceiverAndByteContent();
+        // 发送byte
+        byte[] receiverAndByteContent = this.statistics.createReceiverAndByteContent();
+        try {
             this.sendData(receiverAndByteContent);
-            this.terminal = true;
+        } catch (Exception e) {
+            // NOOP
         }
     }
 

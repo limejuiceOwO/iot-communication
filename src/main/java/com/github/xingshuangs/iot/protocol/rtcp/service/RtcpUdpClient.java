@@ -92,13 +92,15 @@ public class RtcpUdpClient extends UdpClientBasic implements IRtspDataStream {
 
     @Override
     public void close() {
-        this.executorService.shutdown();
         if (!this.terminal) {
-            // 发送byte
-            byte[] receiverAndByteContent = this.statistics.createReceiverAndByteContent();
-            this.sendData(receiverAndByteContent);
-            this.terminal = true;
+            return;
         }
+        this.terminal = true;
+
+        this.executorService.shutdown();
+        // 发送byte
+        byte[] receiverAndByteContent = this.statistics.createReceiverAndByteContent();
+        this.sendData(receiverAndByteContent);
         super.close();
     }
 

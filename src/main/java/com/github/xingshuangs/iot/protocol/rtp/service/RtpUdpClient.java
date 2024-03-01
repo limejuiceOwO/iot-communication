@@ -100,8 +100,12 @@ public class RtpUdpClient extends UdpClientBasic implements IRtspDataStream {
 
     @Override
     public void close() {
-        this.executorService.shutdown();
+        if (this.terminal) {
+            return;
+        }
         this.terminal = true;
+
+        this.executorService.shutdown();
         super.close();
     }
 
